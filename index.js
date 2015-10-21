@@ -2,6 +2,10 @@
 
 var express = require('express');
 var app = express();
+var bodyParser = require('body-parser')
+
+app.set('view engine', 'jade');
+app.use(bodyParser.urlencoded());
 
 var knex = require('knex')({
 	client: 'pg',
@@ -25,7 +29,18 @@ app.get('/data', function (req, res) {
 		.catch(function (err) {
 			res.send(err.message);
 		})
+});
 
+app.get('/login', function (req, res) {
+  res.render('login', { title: 'Hey', message: 'Hello there!'});
+});
+
+app.post('/login', function (req, res) {
+	if (req.body.username === 'Jim') {
+		res.render('success', { title: 'Successful login', message: 'Congrats jim'});
+	} else {
+		res.render('fail', { title: 'Failed', message: 'sorry :('});
+	}
 });
 
 var server = app.listen(3000, function () {

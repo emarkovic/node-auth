@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.14.1",
     "express": "^4.13.3",
+    "jade": "^1.11.0",
     "knex": "^0.8.6",
     "pg": "^4.4.3"
   }
