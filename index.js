@@ -1,5 +1,5 @@
 //nerp stack - node express react postgress
-
+var bcrypt = require('bcrypt');
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser')
@@ -36,11 +36,27 @@ app.get('/login', function (req, res) {
 });
 
 app.post('/login', function (req, res) {
-	if (req.body.username === 'Jim') {
-		res.render('success', { title: 'Successful login', message: 'Congrats jim'});
-	} else {
-		res.render('fail', { title: 'Failed', message: 'sorry :('});
-	}
+
+	knex.select('*').from('users').where({username : req.body.username})
+		.then(function (rows) {
+			console.log(rows);
+			if (rows && rows.length) {
+				var user = rows[0].username;
+				var pass = rows[0].password;
+
+				bcrypt.compare(req.body.password, pass, function(err, matches) {
+					if(matches) {
+						res.render('success', { title: 'Successful login', message: 'Congrats'});
+					} else {
+						res.render('fail', { title: 'Failed', message: 'sorry :('});			
+					}				    
+				});
+
+
+			} else {
+				res.render('fail', { title: 'Failed', message: 'sorry :('});			
+			}
+		})
 });
 
 var server = app.listen(3000, function () {
