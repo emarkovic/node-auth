@@ -3,10 +3,6 @@ var bcrypt = require('bcrypt');
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser')
-
-app.set('view engine', 'jade');
-app.use(bodyParser.urlencoded());
-
 var knex = require('knex')({
 	client: 'pg',
 	connection: {
@@ -17,12 +13,14 @@ var knex = require('knex')({
 	}
 });
 
-app.get('/', function (req, res) {
-	res.send('Hello World!');
-});
+app.set('view engine', 'jade');
+app.use(bodyParser.urlencoded());
+
 
 app.get('/data', function (req, res) {
-	knex.select('*').from('users')
+	knex
+		.select('*')
+		.from('users')
 		.then(function (rows) {
 			res.send(rows);			
 		})
@@ -31,30 +29,87 @@ app.get('/data', function (req, res) {
 		})
 });
 
+app.get('/register', function (req, res) {
+	res.render('register', { 
+		title: 'Register', 
+		message: 'Sign up!'
+	});	
+})
+
+app.post('/register', function (req, res) {
+	var user = {
+		username: req.body.username, 
+		password: req.body.password
+	};
+
+	bcrypt.genSalt(10, function(err, salt) {
+	    bcrypt.hash(user.password, salt, function(err, hash) {
+	        user.password = hash;
+	        knex
+	        	.insert(user)
+	        	.returning('id')
+	        	.into('users')
+	        	.then(function () {
+	        		if (id) {
+	        			res.render('success', { 
+		        			title: 'Successful Registration', 
+		        			message: 'Successful Registration'
+	        			});
+	        		} else {
+	        			res.render('fail', { 
+		        			title: 'Failed', 
+		        			message: 'Registration failed'
+	        			});
+	        		}	        		
+	        	})
+	        	.catch(function (err) {
+	        		res.render('fail', { 
+	        			title: 'Failed', 
+	        			message: 'Registration failed'
+	        		});
+	        	});
+	    });
+	    
+	});	
+})
+
 app.get('/login', function (req, res) {
-  res.render('login', { title: 'Hey', message: 'Hello there!'});
+  res.render('login', { 
+  	title: 'Hey', 
+  	message: 'Hello there!'
+  });
 });
 
 app.post('/login', function (req, res) {
-
-	knex.select('*').from('users').where({username : req.body.username})
+	knex
+		.select()
+		.from('users')
+		.where({username : req.body.username})
 		.then(function (rows) {
-			console.log(rows);
 			if (rows && rows.length) {
 				var user = rows[0].username;
 				var pass = rows[0].password;
 
 				bcrypt.compare(req.body.password, pass, function(err, matches) {
 					if(matches) {
-						res.render('success', { title: 'Successful login', message: 'Congrats'});
+						res.render('success', { 
+							title: 'Successful login', 
+							message: 'Successful login'
+						});
 					} else {
-						res.render('fail', { title: 'Failed', message: 'sorry :('});			
+						res.render('fail', { 
+							title: 'Failed', 
+							message: 'sorry :('
+						});			
 					}				    
 				});
 
 
 			} else {
-				res.render('fail', { title: 'Failed', message: 'sorry :('});			
+				res.render('fail', { 
+					title: 'Failed', 
+					message: 'sorry :('
+				});			
 			}
 		})
 });
